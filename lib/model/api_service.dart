@@ -3,26 +3,23 @@ import 'package:cartify_app/model/items.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  Future<List<Product>?> fetchProducts() async {
-    var client = http.Client();
-    var uri = Uri.parse("https://dummyjson.com/products");
+  Future<List<Product>> fetchProducts({int limit = 0, int skip = 0}) async {
+    final uri = Uri.parse("https://dummyjson.com/products?limit=$limit&skip=$skip");
 
     try {
-      var response = await client.get(uri);
+      final response = await http.get(uri);
+
       if (response.statusCode == 200) {
-        var jsonResponse = jsonDecode(response.body); // Convert String to JSON
-        List<Product> products = (jsonResponse["products"] as List)
+        final jsonResponse = jsonDecode(response.body);
+        return (jsonResponse["products"] as List)
             .map((item) => Product.fromJson(item))
             .toList();
-        return products;
       } else {
-        return null;
+        throw Exception("Failed to load products. Status code: ${response.statusCode}");
       }
     } catch (e) {
       print("Error fetching products: $e");
-      return null;
-    } finally {
-      client.close();
+      throw Exception("Error fetching products");
     }
   }
 }

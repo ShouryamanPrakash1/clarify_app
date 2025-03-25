@@ -101,11 +101,8 @@ class Product {
         : Dimensions.fromJson(json["dimensions"]),
     warrantyInformation: json["warrantyInformation"],
     shippingInformation: json["shippingInformation"],
-    availabilityStatus:
-    availabilityStatusValues.map[json["availabilityStatus"]],
-    reviews: (json["reviews"] as List?)
-        ?.map((x) => Review.fromJson(x))
-        .toList(),
+    availabilityStatus: availabilityStatusValues.map[json["availabilityStatus"]],
+    reviews: (json["reviews"] as List?)?.map((x) => Review.fromJson(x)).toList(),
     returnPolicy: returnPolicyValues.map[json["returnPolicy"]],
     minimumOrderQuantity: json["minimumOrderQuantity"],
     meta: json["meta"] == null ? null : Meta.fromJson(json["meta"]),
@@ -129,8 +126,7 @@ class Product {
     "dimensions": dimensions?.toJson(),
     "warrantyInformation": warrantyInformation,
     "shippingInformation": shippingInformation,
-    "availabilityStatus":
-    availabilityStatusValues.reverse[availabilityStatus],
+    "availabilityStatus": availabilityStatusValues.reverse[availabilityStatus],
     "reviews": reviews?.map((x) => x.toJson()).toList(),
     "returnPolicy": returnPolicyValues.reverse[returnPolicy],
     "minimumOrderQuantity": minimumOrderQuantity,
@@ -138,6 +134,15 @@ class Product {
     "images": images,
     "thumbnail": thumbnail,
   };
+
+  // ✅ Override equality and hashCode to correctly compare products
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is Product && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ✅ Define missing classes
