@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cartify_app/model/items.dart';
-import 'package:cartify_app/riverpod//cart_provider.dart';
+import 'package:cartify_app/riverpod/cart_provider.dart';
 
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});

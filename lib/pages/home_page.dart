@@ -23,7 +23,15 @@ class HomePage extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.shopping_cart),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CartPage()));
+                  final cartItems = ref.read(cartProvider);
+                  print("Cart button tapped! Current cart size: ${cartItems.length}");
+
+                  if (cartItems.isNotEmpty) {
+                    print("Navigating to Cart Page...");
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const CartPage()));
+                  } else {
+                    print("Cart is empty, not navigating.");
+                  }
                 },
               ),
               if (cartItems.isNotEmpty)
@@ -106,8 +114,11 @@ class HomePage extends ConsumerWidget {
                       right: 8,
                       child: GestureDetector(
                         onTap: () {
+                          print("Adding to cart: ${product.title}, ID: ${product.id}");
                           ref.read(cartProvider.notifier).addToCart(product);
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to cart!")));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("${product.title} added to cart!")),
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(6),
