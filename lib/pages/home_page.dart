@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cartify_app/model/api_service.dart'; // Ensure correct path
-import 'package:cartify_app/model/items.dart'; // Ensure correct path
+import 'package:cartify_app/model/api_service.dart'; // Adjust path based on your project
+import 'package:cartify_app/model/items.dart'; // Ensure this points to your Catalogue/Product models
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,7 +11,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Product>?> _productsFuture;
-  final double exchangeRate = 85.78; // 1 USD = ₹85.78
+  final List<Product> _cartItems = [];
 
   @override
   void initState() {
@@ -19,20 +19,31 @@ class _HomePageState extends State<HomePage> {
     _productsFuture = ApiService().fetchProducts();
   }
 
+  void addToCart(Product product) {
+    setState(() {
+      _cartItems.add(product);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${product.title} added to cart')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        backgroundColor: Colors.blue,
+        title: const Center(
+          child: Text(
+            'Catalogue',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
+            icon: const Icon(Icons.shopping_cart, color: Colors.white),
             onPressed: () {
-              // Navigate to Cart Page (Implement this separately)
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CartPage()),
-              );
+              // Show cart items (optional: navigate to cart page)
             },
           ),
         ],
@@ -54,73 +65,85 @@ class _HomePageState extends State<HomePage> {
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, // 2 items per row
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.7,
+                childAspectRatio: 0.7, // Adjusted aspect ratio for better image fit
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-                double originalPriceUSD = product.price ?? 0.0;
-                double discount = product.discountPercentage ?? 0.0;
 
-                // Convert USD to INR
-                double originalPriceINR = originalPriceUSD * exchangeRate;
-                double finalPriceINR = originalPriceINR - (originalPriceINR * (discount / 100));
+                double exchangeRate = 85.78; // USD to INR conversion
+                double priceInRupees = (product.price ?? 0) * exchangeRate;
+                double discountPercentage = product.discountPercentage ?? 0;
+                double finalPrice = priceInRupees * (1 - discountPercentage / 100);
 
                 return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Stack(
                     children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                          child: Image.network(
-                            product.thumbnail ?? '',
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image_not_supported, size: 50),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                              child: Image.network(
+                                product.thumbnail ?? '',
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.image_not_supported, size: 50),
+                              ),
+                            ),
                           ),
-                        ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  product.title ?? 'No title',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '₹${finalPrice.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 14, color: Colors.green, fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  '₹${priceInRupees.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 12, color: Colors.red, decoration: TextDecoration.lineThrough),
+                                ),
+                                Text(
+                                  '-${discountPercentage.toStringAsFixed(1)}% OFF',
+                                  style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.title ?? 'No title',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: InkWell(
+                          onTap: () => addToCart(product),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5), // Semi-transparent background
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            Text(
-                              'Price: ₹${originalPriceINR.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                decoration: TextDecoration.lineThrough, // Strike-through for MRP
-                              ),
+                            child: const Text(
+                              'Add',
+                              style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              'Final Price: ₹${finalPriceINR.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Discount: ${discount.toStringAsFixed(1)}%',
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
@@ -131,19 +154,6 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-    );
-  }
-}
-
-// Dummy Cart Page (You can implement real cart functionality later)
-class CartPage extends StatelessWidget {
-  const CartPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('My Cart')),
-      body: const Center(child: Text('Your cart is empty!')),
     );
   }
 }
