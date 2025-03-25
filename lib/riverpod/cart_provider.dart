@@ -1,33 +1,42 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cartify_app/model/items.dart';
 
-// Cart Notifier
-class CartNotifier extends StateNotifier<List<Product>> {
-  CartNotifier() : super([]);
+// Cart Notifier using a Map to track quantity
+class CartNotifier extends StateNotifier<Map<Product, int>> {
+  CartNotifier() : super({});
 
   void addToCart(Product product) {
-    state = [...state, product];  // ✅ Adds item to cart
-    print("Added: ${product.title}, Cart now has: ${state.length} items.");
+    state = {
+      ...state,
+      product: (state[product] ?? 0) + 1, // Increment quantity
+    };
   }
 
   void removeFromCart(Product product) {
-    state = state.where((item) => item.id != product.id).toList();
-    print("Removed: ${product.title}, Cart now has: ${state.length} items.");
+    if (!state.containsKey(product)) return;
+
+    final updatedQuantity = state[product]! - 1;
+    if (updatedQuantity > 0) {
+      state = {...state, product: updatedQuantity};
+    } else {
+      final newState = {...state};
+      newState.remove(product);
+      state = newState;
+    }
   }
 
   void clearCart() {
-    state = [];
-    print("Cart is now empty.");
+    state = {};
   }
 }
 
 // Cart Provider
-final cartProvider = StateNotifierProvider<CartNotifier, List<Product>>((ref) {
-  return CartNotifier();
-});
+final cartProvider = StateNotifierProvider<CartNotifier, Map<Product, int>>(
+        (ref) => CartNotifier());
 
 // Total Price Provider
 final totalPriceProvider = Provider<double>((ref) {
   final cartItems = ref.watch(cartProvider);
-  return cartItems.fold(0, (sum, item) => sum + (item.price! * 85.78));
+  return cartItems.entries.fold(
+      0, (sum, entry) => sum + (entry.key.price! * 85.78 * entry.value));
 });

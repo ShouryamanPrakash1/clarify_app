@@ -19,30 +19,62 @@ class CartPage extends ConsumerWidget {
       ),
       body: cartItems.isEmpty
           ? const Center(
-        child: Text(
-          'Your cart is empty!',
-          style: TextStyle(fontSize: 18),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_cart, size: 100, color: Colors.grey),
+            SizedBox(height: 10),
+            Text(
+              'Your cart is empty!',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
         ),
       )
           : Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final product = cartItems[index];
+            child: ListView(
+              children: cartItems.entries.map((entry) {
+                final product = entry.key;
+                final quantity = entry.value;
+
                 return ListTile(
-                  leading: Image.network(product.thumbnail ?? '', width: 50, height: 50, fit: BoxFit.cover),
+                  leading: Image.network(
+                    product.thumbnail ?? '',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
                   title: Text(product.title ?? 'No Title'),
-                  subtitle: Text('₹${(product.price! * 85.78).toStringAsFixed(2)}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () {
-                      ref.read(cartProvider.notifier).removeFromCart(product);
-                    },
+                  subtitle: Text(
+                    '₹${(product.price! * 85.78 * quantity).toStringAsFixed(2)}',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          ref
+                              .read(cartProvider.notifier)
+                              .removeFromCart(product);
+                        },
+                      ),
+                      Text(quantity.toString(),
+                          style: const TextStyle(fontSize: 16)),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () {
+                          ref
+                              .read(cartProvider.notifier)
+                              .addToCart(product);
+                        },
+                      ),
+                    ],
                   ),
                 );
-              },
+              }).toList(),
             ),
           ),
           Container(
@@ -51,12 +83,37 @@ class CartPage extends ConsumerWidget {
               color: Colors.white,
               border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Text('Total:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('₹${totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total:',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('₹${totalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Proceeding to checkout...'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 12),
+                  ),
+                  child: const Text('Checkout',
+                      style:
+                      TextStyle(fontSize: 18, color: Colors.white)),
+                ),
               ],
             ),
           ),
